@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Nearby Parking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .parking-spot {
+            padding: 8px;
+            margin-bottom: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Find Nearby Parking</h1>
+    <div class="input-group">
+        <label for="latitude">Latitude:</label>
+        <input type="number" id="latitude" step="any" placeholder="Enter Latitude" required>
+    </div>
+    <div class="input-group">
+        <label for="longitude">Longitude:</label>
+        <input type="number" id="longitude" step="any" placeholder="Enter Longitude" required>
+    </div>
+    <div class="input-group">
+        <label for="radius">Radius (in meters):</label>
+        <input type="number" id="radius" value="1000" required>
+    </div>
+    <button id="find-parking-btn">Find Parking</button>
+
+    <div class="results" id="results"></div>
+</div>
+
+<script>
+    // Function to fetch parking spots from the backend
+    async function fetchParkingSpots() {
+        const latitude = parseFloat(document.getElementById('latitude').value);
+        const longitude = parseFloat(document.getElementById('longitude').value);
+        const radius = parseInt(document.getElementById('radius').value);
+
+        // Check if latitude and longitude are valid
+        if (isNaN(latitude) || isNaN(longitude)) {
+            alert('Please enter valid latitude and longitude values.');
+            return;
+        }
+
+        // Show loading message
+        document.getElementById('results').innerHTML = "Loading...";
+
+        // API endpoint (Flask backend)
+        const url = `http://127.0.0.1:5000/find-parking?latitude=${latitude}&longitude=${longitude}&radius=${radius}`;
+
+        try {
+            // Fetch data from backend
+            const response = await fetch(url);
+            const data = await response.json();
+
+            // Display the results
+            const resultsDiv = document.getElementById('results');
+            if (data.parking_spots && data.parking_spots.length > 0) {
+                resultsDiv.innerHTML = '<h3>Nearby Parking Spots:</h3>';
+                data.parking_spots.forEach(spot => {
+                    const spotDiv = document.createElement('div');
+                    spotDiv.classList.add('parking-spot');
+                    spotDiv.innerHTML = `Latitude: ${spot.lat}, Longitude: ${spot.lon}`;
+                    resultsDiv.appendChild(spotDiv);
+                });
+            } else {
+                resultsDiv.innerHTML = '<p>No parking found nearby.</p>';
+            }
+        } catch (error) {
+            console.error('Error fetching parking spots:', error);
+            document.getElementById('results').innerHTML = '<p>Error fetching parking spots. Please try again later.</p>';
+        }
+    }
+
+    // Event listener for the "Find Parking" button
+    document.getElementById('find-parking-btn').addEventListener('click', fetchParkingSpots);
+</script>
+
+</body>
+</html>
